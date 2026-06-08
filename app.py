@@ -1,29 +1,38 @@
-from flask import Flask,request, jsonify
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route("/app/<shape>")
-def area(shape):
+@app.route("/area", methods=["POST"])
+def calculate_area():
+    data = request.get_json()
+
+    shape = data.get("shape")
+
     if shape == "circle":
-        radius = float(request.args.get("radius"))
+        radius = data.get("radius")
+        if radius is None:
+            return jsonify({"error": "radius is required"}), 400
         area = 3.14 * radius * radius
-        return jsonify ({"shape": "circle", "area": area})
-    
+        return jsonify({"shape": "circle", "area": area})
+
     elif shape == "square":
-        length = float(request.args.get("length"))
+        length = data.get("length")
+        if length is None:
+            return jsonify({"error": "length is required"}), 400
         area = length * length
-        return jsonify ({"shape": "square", "area": area})
-    
+        return jsonify({"shape": "square", "area": area})
+
     elif shape == "rectangle":
-        length = float(request.args.get("length"))
-        width = float(request.args.get("width"))
+        length = data.get("length")
+        width = data.get("width")
+        if length is None or width is None:
+            return jsonify({"error": "length and width are required"}), 400
         area = length * width
-        return jsonify ({"shape": "rectangle", "area": area})
-    
+        return jsonify({"shape": "rectangle", "area": area})
+
     else:
-        return jsonify ({"error": "unknown shape"})
-    
+        return jsonify({"error": "invalid shape"}), 400
 
-    if __name__ == "__main__":
-        app.run(debug=True)
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
