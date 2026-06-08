@@ -8,28 +8,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    
-      steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  - name: Configure AWS credentials
-    uses: aws-actions/configure-aws-credentials@v4
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-  - name: Login to ECR
-    run: |
-      aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-      | docker login --username AWS --password-stdin 004285425899.dkr.ecr.us-east-1.amazonaws.com
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+          | docker login --username AWS --password-stdin 004285425899.dkr.ecr.us-east-1.amazonaws.com
 
-  - name: Build Docker image
-    run: docker build -t area-app .
+      - name: Build Docker image
+        run: docker build -t area-app .
 
-  - name: Tag image
-    run: docker tag area-app:latest 004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app:latest
+      - name: Tag image
+        run: docker tag area-app:latest 004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app:latest
 
-  - name: Push image to ECR
-    run: docker push 004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app:latest
+      - name: Push image to ECR
+        run: docker push 004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app:latest
