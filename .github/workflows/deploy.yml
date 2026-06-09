@@ -2,7 +2,8 @@ name: Build Docker Image
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
   build:
@@ -21,8 +22,8 @@ jobs:
 
       - name: Login to ECR
         run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-          | docker login --username AWS --password-stdin 004285425899.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin 004285425899.dkr.ecr.us-east-1.amazonaws.com
 
       - name: Build Docker image
         run: docker build -t area-app .
