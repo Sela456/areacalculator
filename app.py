@@ -2,6 +2,11 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+@app.route("/")
+def health_check():
+    return "OK", 200
+
+
 @app.route("/area", methods=["POST"])
 def calculate_area():
     data = request.get_json()
