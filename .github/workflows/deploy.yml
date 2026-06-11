@@ -1,36 +1,39 @@
-name: Build Docker Image
-
+name: Deploy to ECS
 on:
   push:
     branches: ["main"]
-      
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: configure AWS
         uses: aws-actions/configure-aws-credentials@v4
-        with:
+        with: 
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
-          docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+      - name: login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
+      - name: build docker image
         run: docker build -t area-app .
 
-      - name: Tag image
-        run: docker tag area-app:latest ${{ secrets.ECR_REGISTRY }}/area-app:latest
+      - name: tag image
+        run: docker tag area-app:latest ${{ steps.login-ecr.outputs.registry }}/area-app:latest
 
-      - name: Push image to ECR
-        run: docker push ${{ secrets.ECR_REGISTRY }}/area-app:latest
-      
+      - name: push image
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/area-app:latest
+
+      - name: force new ECS deployment
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --force-new-deployment
