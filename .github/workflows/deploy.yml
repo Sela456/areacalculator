@@ -33,4 +33,4 @@ jobs:
 
       - name: Push image to ECR
         run: docker push ${{ secrets.ECR_REGISTRY }}/area-app:latest
-        
+      
