@@ -44,5 +44,7 @@ jobs:
             --services ${{ secrets.ECS_SERVICE }} \
             --region ${{ secrets.AWS_REGION }} 
 
+            
+
            
 
