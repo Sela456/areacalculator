@@ -1,50 +1,73 @@
-name: Deploy to ECS
+name: Full CI/CD Pipeline to ECS
+
 on:
   push:
     branches: ["main"]
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: configure AWS
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install flake8 
+
+      - name: Lint code
+        run: flake8 .
+
+      - name: Run tests
+        run: |
+          python -m unittest shapestest.py
+
+      - name: Build Docker image
+        run: docker build -t area-app:${{ github.sha }} .
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
-        with: 
+        with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: login to ECR
+      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: build docker image
-        run: docker build -t area-app .
+      - name: Tag image
+        run: |
+          docker tag area-app:${{ github.sha }} \
+          ${{ steps.login-ecr.outputs.registry }}/area-app:${{ github.sha }}
 
-      - name: tag image
-        run: docker tag area-app:latest ${{ steps.login-ecr.outputs.registry }}/area-app:latest
+      - name: Push image
+        run: |
+          docker push ${{ steps.login-ecr.outputs.registry }}/area-app:${{ github.sha }}
 
-      - name: push image
-        run: docker push ${{ steps.login-ecr.outputs.registry }}/area-app:latest
-
-      - name: Force new ECS deployment 
+      - name: Deploy to ECS
         run: |
           aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE }} \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
             --force-new-deployment \
-            --region ${{ secrets.AWS_REGION }}
+            --region $AWS_REGION
 
+      - name: Wait for stability
+        run: |
           aws ecs wait services-stable \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --services ${{ secrets.ECS_SERVICE }} \
-            --region ${{ secrets.AWS_REGION }} 
-
-            
-
-           
-
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE \
+            --region $AWS_REGION
