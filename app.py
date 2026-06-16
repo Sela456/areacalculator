@@ -5,6 +5,8 @@ app = Flask(__name__)
 # -------------------------
 # WEB PAGE (GET)
 # -------------------------
+
+
 @app.route("/", methods=["GET"])
 def home():
     return """
@@ -37,10 +39,10 @@ def home():
 
         if (shape === "circle") {
             data.radius = Number(radius);
-        } 
+        }
         else if (shape === "square") {
             data.length = Number(length);
-        } 
+        }
         else if (shape === "rectangle") {
             data.length = Number(length);
             data.width = Number(width);
@@ -65,6 +67,8 @@ def home():
 # -------------------------
 # API (POST)
 # -------------------------
+
+
 @app.route("/area", methods=["POST"])
 def calculate_area():
     data = request.get_json()
