@@ -17,7 +17,7 @@ def triangle_area(length, breadth):
 
 
 def main():
-    print("Enter shape whose area is to be calculated:" 
+    print("Enter shape whose area is to be calculated:"
           " circle, square, rectangle, triangle")
     shape = input("enter shape: ").lower()
 
