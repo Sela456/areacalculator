@@ -30,3 +30,7 @@ container_port = 5000
 
 # Docker image from ECR
 image_url = "004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app:latest"
+
+db_username = "selasi"
+
+db_password = "mypassword123456"

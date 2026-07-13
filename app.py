@@ -1,105 +1,160 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
+
+from database import create_table, get_connection
+
 
 app = Flask(__name__)
 
-# -------------------------
-# WEB PAGE (GET)
-# -------------------------
+
+# Create database table when application starts
+create_table()
 
 
-@app.route("/", methods=["GET"])
+# -------------------------
+# WEB PAGE
+# -------------------------
+
+@app.route("/")
 def home():
-    return """
-    <h2>Area Calculator</h2>
 
-    <label>Shape:</label>
-    <input id="shape" placeholder="circle / square / rectangle"><br><br>
+    return render_template("index.html")
 
-    <label>Radius (circle):</label>
-    <input id="radius" placeholder="radius"><br><br>
-
-    <label>Length:</label>
-    <input id="length" placeholder="length"><br><br>
-
-    <label>Width:</label>
-    <input id="width" placeholder="width"><br><br>
-
-    <button onclick="calculate()">Calculate Area</button>
-
-    <h3 id="result"></h3>
-
-    <script>
-    async function calculate() {
-        const shape = document.getElementById('shape').value;
-        const radius = document.getElementById('radius').value;
-        const length = document.getElementById('length').value;
-        const width = document.getElementById('width').value;
-
-        let data = { shape };
-
-        if (shape === "circle") {
-            data.radius = Number(radius);
-        }
-        else if (shape === "square") {
-            data.length = Number(length);
-        }
-        else if (shape === "rectangle") {
-            data.length = Number(length);
-            data.width = Number(width);
-        }
-
-        const res = await fetch('/area', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await res.json();
-
-        document.getElementById('result').innerText =
-            "Result: " + JSON.stringify(result);
-    }
-    </script>
-    """
 
 # -------------------------
-# API (POST)
+# AREA CALCULATOR API
 # -------------------------
-
 
 @app.route("/area", methods=["POST"])
 def calculate_area():
+
     data = request.get_json()
+
+
+    # Get database connection
+    connection = get_connection()
+
+
+    # Create cursor
+    cursor = connection.cursor()
+
+
+    username = data.get("username")
 
     shape = data.get("shape")
 
+    dimension1 = data.get("dimension1")
+
+    dimension2 = data.get("dimension2")
+
+
+    if not username:
+        return jsonify({
+            "error": "Username is required"
+        }), 400
+
+
+    if not shape:
+        return jsonify({
+            "error": "Shape is required"
+        }), 400
+
+
+    try:
+
+        dimension1 = float(dimension1)
+
+    except:
+
+        return jsonify({
+            "error": "Invalid dimension"
+        }), 400
+
+
+
     if shape == "circle":
-        radius = data.get("radius")
-        if radius is None:
-            return jsonify({"error": "radius is required"}), 400
-        area = 3.14 * radius * radius
-        return jsonify({"shape": "circle", "area": area})
+
+        area = 3.14 * dimension1 * dimension1
+
 
     elif shape == "square":
-        length = data.get("length")
-        if length is None:
-            return jsonify({"error": "length is required"}), 400
-        area = length * length
-        return jsonify({"shape": "square", "area": area})
+
+        area = dimension1 * dimension1
+
 
     elif shape == "rectangle":
-        length = data.get("length")
-        width = data.get("width")
-        if length is None or width is None:
-            return jsonify({"error": "length and width are required"}), 400
-        area = length * width
-        return jsonify({"shape": "rectangle", "area": area})
+
+        if dimension2 is None:
+
+            return jsonify({
+                "error": "Rectangle requires length and width"
+            }), 400
+
+
+        dimension2 = float(dimension2)
+
+        area = dimension1 * dimension2
+
 
     else:
-        return jsonify({"error": "invalid shape"}), 400
 
+        return jsonify({
+            "error": "Invalid shape"
+        }), 400
+
+
+
+    # Save calculation into PostgreSQL
+
+    cursor.execute(
+        """
+        INSERT INTO calculations
+        (username, shape, dimension1, dimension2, area)
+
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+
+        (
+            username,
+            shape,
+            dimension1,
+            dimension2,
+            area
+        )
+    )
+
+
+    # Save changes permanently
+    connection.commit()
+
+
+
+    # Close database resources
+
+    cursor.close()
+
+    connection.close()
+
+
+
+    return jsonify({
+
+        "username": username,
+
+        "shape": shape,
+
+        "area": round(area, 2)
+
+    })
+
+
+
+# -------------------------
+# START APPLICATION
+# -------------------------
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+
+    app.run(
+        host="0.0.0.0",
+        port=5000
+    )

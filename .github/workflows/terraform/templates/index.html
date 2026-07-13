@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Area Calculator</title>
+
+    <style>
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background: #f2f7ff;
+
+            text-align: center;
+
+            padding: 40px;
+
+        }
+
+
+        .container {
+
+            background: white;
+
+            width: 350px;
+
+            margin: auto;
+
+            padding: 25px;
+
+            border-radius: 10px;
+
+            box-shadow: 0px 0px 10px gray;
+
+        }
+
+
+        input, select, button {
+
+            width: 90%;
+
+            padding: 10px;
+
+            margin: 8px;
+
+        }
+
+
+        button {
+
+            background: #2563eb;
+
+            color: white;
+
+            border: none;
+
+            cursor: pointer;
+
+        }
+
+
+        button:hover {
+
+            background: #1d4ed8;
+
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h2>Area Calculator</h2>
+
+
+<input id="username" placeholder="Enter your name">
+
+
+<select id="shape">
+
+<option value="circle">Circle</option>
+
+<option value="square">Square</option>
+
+<option value="rectangle">Rectangle</option>
+
+</select>
+
+
+<input id="dimension1" placeholder="Radius / Length">
+
+
+<input id="dimension2" placeholder="Width (rectangle only)">
+
+
+
+<button onclick="calculate()">
+
+Calculate Area
+
+</button>
+
+
+
+<h3 id="result"></h3>
+
+
+</div>
+
+
+
+<script>
+
+
+async function calculate(){
+
+
+    const username = document.getElementById("username").value;
+
+    const shape = document.getElementById("shape").value;
+
+    const dimension1 = document.getElementById("dimension1").value;
+
+    const dimension2 = document.getElementById("dimension2").value;
+
+
+
+    const data = {
+
+
+        username: username,
+
+        shape: shape,
+
+        dimension1: dimension1,
+
+        dimension2: dimension2
+
+
+    };
+
+
+
+    const response = await fetch("/area", {
+
+
+        method: "POST",
+
+
+        headers: {
+
+            "Content-Type": "application/json"
+
+        },
+
+
+        body: JSON.stringify(data)
+
+
+    });
+
+
+
+    const result = await response.json();
+
+
+
+    document.getElementById("result").innerHTML =
+
+        "User: " + result.username +
+
+        "<br>Shape: " + result.shape +
+
+        "<br>Area: " + result.area;
+
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
