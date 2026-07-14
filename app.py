@@ -47,18 +47,15 @@ def calculate_area():
     dimension1 = data.get("dimension1")
     dimension2 = data.get("dimension2")
 
-
     if not username:
         return jsonify({
             "error": "Username is required"
         }), 400
 
-
     if not shape:
         return jsonify({
             "error": "Shape is required"
         }), 400
-
 
     try:
         dimension1 = float(dimension1)
@@ -68,16 +65,13 @@ def calculate_area():
             "error": "Invalid dimension"
         }), 400
 
-
     if shape == "circle":
 
         area = 3.14 * dimension1 * dimension1
 
-
     elif shape == "square":
 
         area = dimension1 * dimension1
-
 
     elif shape == "rectangle":
 
@@ -86,19 +80,15 @@ def calculate_area():
                 "error": "Rectangle requires length and width"
             }), 400
 
-
         dimension2 = float(dimension2)
 
         area = dimension1 * dimension2
-
 
     else:
 
         return jsonify({
             "error": "Invalid shape"
         }), 400
-
-
 
     # Save calculation into PostgreSQL
 
@@ -119,15 +109,11 @@ def calculate_area():
         )
     )
 
-
     connection.commit()
-
 
     cursor.close()
 
     connection.close()
-
-
 
     # Return JSON for API clients
 
@@ -142,7 +128,6 @@ def calculate_area():
             "area": round(area, 2)
 
         })
-
 
     # Return webpage result
 
@@ -217,11 +202,9 @@ def calculate_area():
     """
 
 
-
 # -------------------------
 # START APPLICATION
 # -------------------------
-
 if __name__ == "__main__":
 
     app.run(
