@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Area Calculator</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 350px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input, select {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Area Calculator</h1>
+
+    <form action="/area" method="POST">
+
+        <label>Name</label>
+        <input 
+            type="text" 
+            name="username" 
+            placeholder="Enter your name"
+            required
+        >
+
+        <label>Choose Shape</label>
+
+        <select name="shape">
+            <option value="circle">Circle</option>
+            <option value="square">Square</option>
+            <option value="rectangle">Rectangle</option>
+        </select>
+
+
+        <label>Dimension 1</label>
+
+        <input 
+            type="number" 
+            name="dimension1"
+            placeholder="Radius / Length"
+            required
+        >
+
+
+        <label>Dimension 2 (Rectangle only)</label>
+
+        <input 
+            type="number" 
+            name="dimension2"
+            placeholder="Width"
+        >
+
+
+        <button type="submit">
+            Calculate
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

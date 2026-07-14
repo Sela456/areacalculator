@@ -28,7 +28,7 @@ resource "aws_ecs_task_definition" "task_definition" {
     {
       name = "area-container"
 
-      image = "004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app:latest"
+      image = "004285425899.dkr.ecr.us-east-1.amazonaws.com/area-app@sha256:f17ed275aa9cb378890953113e1812ac8c09c3b7bcdd74712d45b3ce1be79921"
 
       essential = true
 
@@ -95,12 +95,23 @@ resource "aws_ecs_service" "main" {
   name            = "ecs-service"
   cluster         = aws_ecs_cluster.app.id
   task_definition = aws_ecs_task_definition.task_definition.arn
-  desired_count   = 1
+
+  desired_count   = 2
   launch_type     = "FARGATE"
 
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+
   network_configuration {
-    subnets          = [aws_subnet.public_a.id, aws_subnet.public_b.id]
-    security_groups  = [aws_security_group.ecs_sg.id]
+    subnets          = [
+      aws_subnet.public_a.id,
+      aws_subnet.public_b.id
+    ]
+
+    security_groups  = [
+      aws_security_group.ecs_sg.id
+    ]
+
     assign_public_ip = true
   }
 

@@ -6,8 +6,15 @@ from database import create_table, get_connection
 app = Flask(__name__)
 
 
-# Create database table when application starts
-create_table()
+try:
+    create_table()
+except Exception as e:
+    print("Database initialization failed:", e)
+
+
+@app.route("/health")
+def health():
+    return "OK", 200
 
 
 # -------------------------
@@ -25,12 +32,14 @@ def home():
 
 @app.route("/area", methods=["POST"])
 def calculate_area():
-    data = request.get_json()
 
-    # Get database connection
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
     connection = get_connection()
 
-    # Create cursor
     cursor = connection.cursor()
 
     username = data.get("username")
@@ -38,15 +47,18 @@ def calculate_area():
     dimension1 = data.get("dimension1")
     dimension2 = data.get("dimension2")
 
+
     if not username:
         return jsonify({
             "error": "Username is required"
         }), 400
 
+
     if not shape:
         return jsonify({
             "error": "Shape is required"
         }), 400
+
 
     try:
         dimension1 = float(dimension1)
@@ -56,29 +68,40 @@ def calculate_area():
             "error": "Invalid dimension"
         }), 400
 
+
     if shape == "circle":
+
         area = 3.14 * dimension1 * dimension1
 
+
     elif shape == "square":
+
         area = dimension1 * dimension1
+
 
     elif shape == "rectangle":
 
-        if dimension2 is None:
+        if not dimension2:
             return jsonify({
                 "error": "Rectangle requires length and width"
             }), 400
+
 
         dimension2 = float(dimension2)
 
         area = dimension1 * dimension2
 
+
     else:
+
         return jsonify({
             "error": "Invalid shape"
         }), 400
 
+
+
     # Save calculation into PostgreSQL
+
     cursor.execute(
         """
         INSERT INTO calculations
@@ -86,6 +109,7 @@ def calculate_area():
 
         VALUES (%s, %s, %s, %s, %s)
         """,
+
         (
             username,
             shape,
@@ -95,18 +119,103 @@ def calculate_area():
         )
     )
 
-    # Save changes permanently
+
     connection.commit()
 
-    # Close database resources
+
     cursor.close()
+
     connection.close()
 
-    return jsonify({
-        "username": username,
-        "shape": shape,
-        "area": round(area, 2)
-    })
+
+
+    # Return JSON for API clients
+
+    if request.is_json:
+
+        return jsonify({
+
+            "username": username,
+
+            "shape": shape,
+
+            "area": round(area, 2)
+
+        })
+
+
+    # Return webpage result
+
+    return f"""
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+
+        <title>Area Result</title>
+
+        <style>
+
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }}
+
+            .container {{
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                text-align: center;
+                width: 350px;
+            }}
+
+            h1 {{
+                color: #333;
+            }}
+
+            a {{
+                display: inline-block;
+                margin-top: 20px;
+                background: #007bff;
+                color: white;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 5px;
+            }}
+
+        </style>
+
+    </head>
+
+
+    <body>
+
+        <div class="container">
+
+            <h1>Calculation Result</h1>
+
+            <p><strong>Name:</strong> {username}</p>
+
+            <p><strong>Shape:</strong> {shape}</p>
+
+            <p><strong>Area:</strong> {round(area, 2)}</p>
+
+
+            <a href="/">
+                Calculate Again
+            </a>
+
+        </div>
+
+    </body>
+
+    </html>
+    """
+
 
 
 # -------------------------
@@ -114,6 +223,7 @@ def calculate_area():
 # -------------------------
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
         port=5000
